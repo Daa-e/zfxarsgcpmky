@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>공부 로드맵 연습</title>
+<script>
+// 깜빡임을 막으려고 그리기 전에 테마를 먼저 정한다.
+(function(){
+  var t = null; try { t = localStorage.getItem('theme'); } catch (e) {}
+  if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  document.documentElement.dataset.theme = t;
+})();
+</script>
+<style>
+:root{
+  --bg:#f3f4f7;--panel:#ffffff;--fg:#1a1c21;--mute:#5d6470;--line:#d9dce3;
+  --accent:#2457d6;--accent-fg:#fff;--ok:#12803a;--bad:#c62828;--hint:#fff7e0;--hint-line:#e8c96a;--hint-fg:#4a3b00;
+  --shadow:0 1px 3px rgba(20,24,40,.08),0 6px 18px rgba(20,24,40,.06);
+  /* 코드 영역은 어느 테마에서나 검정이다. */
+  --code-bg:#14151a;--code-fg:#e8e9ee;--code-line:#2b2d35;--code-mute:#8d93a0;
+}
+:root[data-theme="dark"]{
+  --bg:#0f1013;--panel:#1a1b20;--fg:#ebecf0;--mute:#9ba1ad;--line:#2d2f37;
+  --accent:#7aa7ff;--accent-fg:#0b1020;--ok:#4ade80;--bad:#ff8080;--hint:#2a2512;--hint-line:#6b5a1a;--hint-fg:#f2e3a6;
+  --shadow:none;
+  --code-bg:#0a0b0e;--code-fg:#e8e9ee;--code-line:#2b2d35;--code-mute:#8d93a0;
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+:root[data-theme="light"]{color-scheme:light}
+:root[data-theme="dark"]{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.8 "Noto Sans KR","Malgun Gothic",system-ui,sans-serif}
+a{color:var(--accent)}
+.wrap{display:grid;grid-template-columns:310px minmax(0,1fr);min-height:100vh}
+nav{background:var(--panel);border-right:1px solid var(--line);padding:18px 14px;position:sticky;top:0;height:100vh;overflow:auto}
+main{padding:28px 36px 120px;max-width:960px;width:100%;margin:0 auto}
+@media (max-width:820px){.wrap{grid-template-columns:minmax(0,1fr)}nav{position:static;height:auto;max-height:55vh;border-right:0;border-bottom:1px solid var(--line)}main{padding:18px 14px 80px}}
+main{min-width:0}
+article table{display:block;max-width:100%;overflow-x:auto}
+
+/* 왼쪽 목록 */
+nav h1{font-size:18px;margin:0}
+.navtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.icon{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--mute);cursor:pointer;padding:0}
+.icon:hover{color:var(--fg);border-color:var(--accent)}
+#expand{display:none;position:fixed;top:14px;left:14px;z-index:5;box-shadow:var(--shadow)}
+.wrap.collapsed{grid-template-columns:1fr}
+.wrap.collapsed nav{display:none}
+.wrap.collapsed #expand{display:inline-flex}
+.wrap.collapsed main{padding-left:64px;padding-right:64px}
+.theme{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:12px}
+.theme button{border:0;background:none;color:var(--mute);padding:5px 14px;cursor:pointer;font:inherit;font-size:13px}
+.theme button.on{background:var(--accent);color:var(--accent-fg);font-weight:600}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chip{border:1px solid var(--line);background:none;color:var(--fg);border-radius:99px;padding:2px 12px;cursor:pointer;font:inherit;font-size:13px}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);font-weight:600}
+.grp{margin:16px 0 4px;font-size:12px;color:var(--mute);font-weight:700;letter-spacing:.02em}
+.item{display:flex;gap:8px;align-items:baseline;padding:4px 8px;border-radius:8px;text-decoration:none;color:var(--fg);font-size:14px;line-height:1.5}
+.item:hover{background:var(--bg)}
+.item.cur{background:var(--bg);font-weight:700;box-shadow:inset 3px 0 0 var(--accent)}
+.item .id{color:var(--mute);font-variant-numeric:tabular-nums}
+.tag{font-size:11px;color:var(--mute);margin-left:auto;white-space:nowrap}
+.done{color:var(--ok);font-weight:700}
+
+/* 노트 본문 */
+article h1{font-size:28px;line-height:1.4;margin:0 0 14px}
+article h2{font-size:21px;margin:44px 0 10px;padding-top:24px;border-top:1px solid var(--line)}
+article h2.sec{border-top:0;padding-top:0}
+article p,article li{max-width:76ch}
+article table{border-collapse:collapse;margin:10px 0;font-size:14.5px}
+article th,article td{border:1px solid var(--line);padding:6px 12px;text-align:left}
+article th{background:var(--panel)}
+blockquote{margin:12px 0;padding:6px 16px;border-left:4px solid var(--accent);background:var(--panel);border-radius:0 8px 8px 0}
+blockquote p{margin:4px 0}
+pre{background:var(--code-bg);color:var(--code-fg);border:1px solid var(--code-line);padding:14px 16px;border-radius:10px;overflow:auto;font:14px/1.6 Consolas,"D2Coding","Malgun Gothic",monospace;margin:12px 0}
+code{font-family:Consolas,"D2Coding",monospace;font-size:.9em}
+:not(pre)>code{background:var(--panel);border:1px solid var(--line);padding:1px 6px;border-radius:5px}
+pre code{background:none;border:0;padding:0;font-size:1em}
+
+/* 문제 카드 */
+.prob{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin:28px 0;overflow:hidden}
+.ph{display:flex;gap:14px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line);background:linear-gradient(0deg,transparent,color-mix(in srgb,var(--accent) 7%,transparent))}
+.num{flex:none;width:36px;height:36px;border-radius:50%;background:var(--accent);color:var(--accent-fg);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px}
+.pt{font-size:18px;font-weight:700;line-height:1.4}
+.meta{display:flex;gap:8px;margin-top:2px;font-size:12.5px}
+.kind{border:1px solid var(--line);border-radius:6px;padding:0 8px;color:var(--mute)}
+.st{border-radius:6px;padding:0 8px;color:var(--mute);border:1px solid var(--line)}
+.st.ok{color:var(--ok);border-color:var(--ok);font-weight:700}
+.pb{padding:6px 20px 22px}
+.lbl{margin:20px 0 6px;font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--accent)}
+.pb p{margin:6px 0}
+textarea{display:block;width:100%;background:var(--code-bg);color:var(--code-fg);border:1px solid var(--code-line);border-radius:10px;padding:14px 16px;font:14px/1.6 Consolas,"D2Coding","Malgun Gothic",monospace;tab-size:4;resize:vertical;white-space:pre;overflow:auto;caret-color:#fff}
+textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+textarea.code{min-height:300px}
+.note-s{display:block;margin-top:10px;color:var(--mute);font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+button.btn{border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:9px;padding:7px 16px;cursor:pointer;font:inherit;font-size:14.5px}
+button.btn:hover{border-color:var(--accent)}
+button.btn.main{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);font-weight:700}
+button.btn.on{border-color:var(--accent);color:var(--accent);font-weight:700}
+button.btn:disabled{opacity:.5;cursor:default}
+.hint{margin:10px 0 0;padding:10px 14px;border-radius:10px;background:var(--hint);border:1px solid var(--hint-line);color:var(--hint-fg)}
+.hint pre{margin:8px 0 0}
+.res{margin-top:16px}
+.res .head{font-size:16px;font-weight:800}
+.pass{color:var(--ok)}.fail{color:var(--bad)}
+.diff{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.diff small{color:var(--mute);font-weight:700}
+@media (max-width:640px){.diff{grid-template-columns:1fr}}
+details>summary{cursor:pointer;font-weight:600}
+
+/* 객관식, 빈칸, 서술 */
+.opts{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:var(--bg)}
+.opt:hover{border-color:var(--accent)}
+.opt input{margin-top:6px;accent-color:var(--accent)}
+.opt:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--bg))}
+pre.fill{white-space:pre-wrap}
+input.blank{background:#262a33;color:var(--code-fg);border:1px solid #4a5160;border-bottom:2px solid var(--accent);border-radius:5px;padding:1px 6px;font:inherit;min-width:6ch}
+input.blank:focus{outline:2px solid var(--accent)}
+input.blank.good{border-color:var(--ok);background:#12301c}
+input.blank.bad{border-color:var(--bad);background:#3a1616}
+
+/* 터치 기기: iOS 는 글자가 16px 보다 작으면 입력칸을 눌렀을 때 화면이 확대된다. */
+@media (pointer:coarse){textarea,input.blank{font-size:16px}}
+/* 키보드 위 기호 줄 (터치 기기에서 코드 입력칸에 포커스가 있을 때만) */
+#symbar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:50;gap:6px;padding:6px 8px;overflow-x:auto;background:var(--panel);border-top:1px solid var(--line);box-shadow:0 -2px 8px rgba(0,0,0,.15)}
+#symbar.show{display:flex}
+#symbar button{flex:none;min-width:40px;height:40px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:16px Consolas,"D2Coding",monospace}
+
+/* 면접 질문 */
+.qa{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin:10px 0;padding:12px 18px;box-shadow:var(--shadow)}
+.qa summary{font-size:16px}
+.qa div{margin-top:8px;color:var(--fg)}
+.soft{color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <button class="icon" id="expand" title="펼치기 (Ctrl+B)" aria-label="목록 펼치기"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="3" width="14" height="12" rx="2"/><path d="M7 3v12"/></svg></button>
+  <nav>
+    <div class="navtop"><h1>공부 로드맵 연습</h1>
+      <button class="icon" id="collapse" title="접기 (Ctrl+B)" aria-label="목록 접기"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="3" width="14" height="12" rx="2"/><path d="M7 3v12"/></svg></button></div>
+    <div class="theme" id="theme"><button data-t="light">화이트</button><button data-t="dark">블랙</button></div>
+    <div class="filters" id="filters"></div>
+    <div id="list"></div>
+  </nav>
+  <main><article id="view">왼쪽에서 노트를 고르세요.</article></main>
+</div>
+<script src="lib/marked.min.js"></script>
+<script src="static.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const store = {
+  get(k){ try{ return localStorage.getItem(k) }catch{ return null } },
+  set(k,v){ try{ localStorage.setItem(k,v) }catch{} },
+};
+let notes = [], grade = '전체', curKey = '';
+
+function setTheme(t){
+  document.documentElement.dataset.theme = t;
+  store.set('theme', t);
+  document.querySelectorAll('#theme button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+}
+document.querySelectorAll('#theme button').forEach(b => b.onclick = () => setTheme(b.dataset.t));
+setTheme(document.documentElement.dataset.theme);
+
+// 폰에서 코드를 칠 때 키보드 위에 자주 쓰는 기호를 띄운다.
+(function symbolBar(){
+  if (!matchMedia('(pointer:coarse)').matches) return;
+  const bar = document.createElement('div');
+  bar.id = 'symbar';
+  const keys = ['Tab','{','}','(',')','[',']',';','<','>','#','&','*','"',"'",',',':','.','-','=','!','|','/','\\','_','+'];
+  bar.innerHTML = keys.map(k => `<button type="button" data-k="${k === '"' ? '&quot;' : k}">${k === 'Tab' ? '⇥' : k.replace('&','&amp;').replace('<','&lt;').replace('>','&gt;')}</button>`).join('');
+  document.body.appendChild(bar);
+  let cur = null;
+  // 버튼을 눌러도 입력칸이 포커스를 잃지 않게 한다.
+  bar.addEventListener('pointerdown', e => e.preventDefault());
+  bar.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b || !cur) return;
+    const t = b.dataset.k === 'Tab' ? '    ' : b.dataset.k;
+    cur.setRangeText(t, cur.selectionStart, cur.selectionEnd, 'end');
+    cur.dispatchEvent(new Event('input', {bubbles:true}));
+  });
+  const place = () => { const v = window.visualViewport; bar.style.bottom = v ? Math.max(0, innerHeight - v.height - v.offsetTop) + 'px' : '0'; };
+  document.addEventListener('focusin', e => { if (e.target.matches('textarea.code')) { cur = e.target; bar.classList.add('show'); place(); } });
+  document.addEventListener('focusout', () => { setTimeout(() => { if (!document.activeElement || !document.activeElement.matches('textarea.code')) { cur = null; bar.classList.remove('show'); } }, 50); });
+  if (window.visualViewport) { visualViewport.addEventListener('resize', place); visualViewport.addEventListener('scroll', place); }
+})();
+
+// 왼쪽 목록 접기. 선택은 저장해서 다음에 열어도 유지한다.
+function setSide(collapsed){
+  $('#wrap').classList.toggle('collapsed', collapsed);
+  store.set('side', collapsed ? 'collapsed' : 'open');
+}
+$('#collapse').onclick = () => setSide(true);
+$('#expand').onclick = () => setSide(false);
+addEventListener('keydown', e => { if (e.ctrlKey && e.key.toLowerCase() === 'b') { e.preventDefault(); setSide(!$('#wrap').classList.contains('collapsed')); } });
+setSide(store.get('side') === 'collapsed');
+
+// 서버 모드는 /api 를 부르고, 정적 모드(window.CW_STATIC, dist 에만 있음)는 브라우저 안에서 같은 답을 만든다.
+async function api(url, opt){
+  if (window.CW_STATIC) return window.CW_STATIC.handle(url, opt);
+  const r = await fetch(url, opt); return r.json();
+}
+
+// 폰 키보드가 바꿔 놓는 글자(둥근 따옴표, 줄임표, 줄 바꿈 없는 공백)를 컴파일 전에 되돌린다.
+const normalizeCode = s => s.replace(/[“”„″]/g, '"').replace(/[‘’′]/g, "'")
+  .replace(/[  -​ 　]/g, ' ').replace(/…/g, '...');
+const solved = (n, p) => store.get(`solved:${n}:${p}`) === '1';
+
+function renderList(){
+  const gs = ['전체','필수','권장','선택'];
+  $('#filters').innerHTML = gs.map(g => `<button class="chip ${g===grade?'on':''}" data-g="${g}">${g}</button>`).join('');
+  document.querySelectorAll('.chip').forEach(b => b.onclick = () => { grade = b.dataset.g; renderList(); });
+  const cur = location.hash.split('/')[2];
+  let html = '', last = '';
+  for (const n of notes.filter(n => grade==='전체' || n.grade===grade)) {
+    if (n.group !== last) { html += `<div class="grp">${n.group}</div>`; last = n.group; }
+    const title = n.file.slice(4).replace(/_/g,' ');
+    const ids = Array.from({length:n.problems}, (_,i)=>`p${i+1}`);
+    const all = n.problems && ids.every(p => solved(n.id,p));
+    html += `<a class="item ${n.id===cur?'cur':''}" href="#/note/${n.id}"><span class="id">${n.id}</span><span>${title}</span><span class="tag ${all?'done':''}">${all?'✓ ':''}${n.grade}${n.problems?` · 문제 ${n.problems}`:''}</span></a>`;
+  }
+  $('#list').innerHTML = html;
+}
+
+// 면접 질문 섹션을 떼어 내서 답을 접어 두는 카드로 만든다.
+function splitInterview(md){
+  const m = md.match(/\n## 면접 질문\n([\s\S]*?)(?=\n## |\s*$)/);
+  if (!m) return { body: md, qa: [] };
+  const qa = [...m[1].matchAll(/^\d+\.\s+\*\*(.+?)\*\*\s*\n\s+([\s\S]*?)(?=\n\d+\.\s+\*\*|\s*$)/gm)].map(x => ({q:x[1], a:x[2].trim()}));
+  return { body: md.replace(m[0], ''), qa };
+}
+
+async function showNote(id){
+  const [note, probs] = await Promise.all([api(`/api/note/${id}`), api(`/api/problems/${id}`)]);
+  const { body, qa } = splitInterview(note.markdown);
+  let h = marked.parse(body);
+  h += `<h2>직접 풀어 보기</h2>`;
+  h += probs.length ? probs.map((p,i)=>problemHtml(id,p,i)).join('') : `<p class="soft">이 노트의 연습 문제는 아직 없습니다.</p>`;
+  if (qa.length) {
+    h += `<h2>면접 질문</h2><p class="soft">먼저 소리 내어 답해 보고 눌러서 확인하세요.</p>`;
+    h += qa.map(x => `<details class="qa"><summary>${esc(x.q)}</summary><div>${marked.parseInline(x.a)}</div></details>`).join('');
+  }
+  $('#view').innerHTML = h;
+  window.scrollTo(0,0);
+  probs.forEach(p => bindProblem(id,p));
+  renderList();
+}
+
+function problemHtml(id,p,i){ return (p.mode==='run'||p.mode==='predict') ? problemHtmlCode(id,p,i) : problemHtmlQuiz(id,p,i); }
+function bindProblem(id,p){ return (p.mode==='run'||p.mode==='predict') ? bindCode(id,p) : bindQuiz(id,p); }
+
+/* ---- 객관식, 빈칸, 서술: 실행 없이 화면에서 채점한다 ---- */
+const normWs = s => s.replace(/\s+/g,' ').trim();
+
+function problemHtmlQuiz(id,p,i){
+  const k = `${id}-${p.id}`, ok = solved(id,p.id);
+  let body = '', btn = '확인';
+  if (p.mode === 'choice') {
+    body = `<div class="lbl">보기</div><div class="opts">` + p.options.map((o,j) =>
+      `<label class="opt"><input type="radio" name="ch-${k}" value="${j+1}"><span>${marked.parseInline(o)}</span></label>`).join('') + `</div>`;
+  } else if (p.mode === 'fill') {
+    const parts = p.code.split(/\{\{(\d+)\}\}/);
+    body = `<div class="lbl">빈칸 채우기</div><pre class="fill">` + parts.map((s,j) => j % 2
+      ? `<input class="blank" id="b-${k}-${s}" spellcheck="false" autocomplete="off" placeholder="${s}" style="width:${Math.max(7, p.blanks[s-1].split('|')[0].trim().length + 3)}ch">`
+      : esc(s)).join('') + `</pre>`;
+  } else {
+    btn = '자가 점검 끝냈습니다';
+    body = `<div class="lbl">내 답</div><textarea class="code" id="in-${k}" style="min-height:150px" spellcheck="false" placeholder="먼저 직접 써 보세요. 정답 보기로 모범 답안과 비교한 뒤 아래 항목을 체크합니다.">${esc(store.get(`code:${id}:${p.id}`)||'')}</textarea>`
+      + `<div class="lbl">자가 점검</div><div class="opts">` + p.checks.map((c,j) =>
+      `<label class="opt"><input type="checkbox" id="ck-${k}-${j}"><span>${marked.parseInline(c)}</span></label>`).join('') + `</div>`;
+  }
+  return `<section class="prob" id="c-${k}">
+    <header class="ph"><span class="num">${i+1}</span><div><div class="pt">${esc(p.title)}</div>
+      <div class="meta"><span class="kind">${esc(p.kind)}</span><span class="st ${ok?'ok':''}" id="ok-${k}">${ok?'✓ 통과':'미완료'}</span></div></div></header>
+    <div class="pb">
+      <div class="lbl">문제</div>
+      ${marked.parse(p.prompt)}
+      ${body}
+      <div class="row">
+        <button class="btn main" id="run-${k}">${btn}</button>
+        <button class="btn" id="hint-${k}">힌트 (0/${p.hints.length})</button>
+        <button class="btn" id="sol-${k}">${p.mode==='free'?'모범 답안 보기':'정답 보기'}</button>
+      </div>
+      <div id="hints-${k}"></div><div id="solbox-${k}"></div><div class="res" id="res-${k}"></div>
+    </div>
+  </section>`;
+}
+
+function bindQuiz(id,p){
+  const k = `${id}-${p.id}`;
+  let shown = 0, solOpen = false;
+  $(`#hint-${k}`).onclick = () => {
+    if (shown >= p.hints.length) return;
+    $(`#hints-${k}`).insertAdjacentHTML('beforeend', `<div class="hint"><b>힌트 ${shown+1}.</b> ${marked.parseInline(p.hints[shown])}</div>`);
+    shown++; $(`#hint-${k}`).textContent = `힌트 (${shown}/${p.hints.length})`;
+    if (shown >= p.hints.length) $(`#hint-${k}`).disabled = true;
+  };
+  const sol = $(`#sol-${k}`), label = sol.textContent;
+  sol.onclick = () => {
+    solOpen = !solOpen;
+    $(`#solbox-${k}`).innerHTML = solOpen ? `<div class="hint"><b>${p.mode==='free'?'모범 답안':'정답'}</b>${marked.parse(p.solution)}</div>` : '';
+    sol.textContent = solOpen ? label.replace('보기','숨기기') : label;
+    sol.classList.toggle('on', solOpen);
+  };
+  const ta = $(`#in-${k}`);
+  if (ta) ta.addEventListener('input', () => store.set(`code:${id}:${p.id}`, ta.value));
+
+  $(`#run-${k}`).onclick = () => {
+    const out = $(`#res-${k}`);
+    let pass = false, msg = '';
+    if (p.mode === 'choice') {
+      const sel = document.querySelector(`input[name="ch-${k}"]:checked`);
+      if (!sel) { out.innerHTML = '<span class="soft">보기를 하나 고르세요.</span>'; return; }
+      pass = +sel.value === p.answer;
+      msg = pass ? '' : '다시 생각해 보세요. 힌트를 쓰거나 노트를 다시 읽어 보세요.';
+    } else if (p.mode === 'fill') {
+      let allOk = true;
+      p.blanks.forEach((b, j) => {
+        const el = $(`#b-${k}-${j+1}`), v = normWs(el.value);
+        const ok = b.split('|').map(normWs).includes(v);
+        el.classList.toggle('good', ok); el.classList.toggle('bad', !ok);
+        if (!ok) allOk = false;
+      });
+      pass = allOk;
+      msg = pass ? '' : '빨간 칸이 틀렸습니다. 대소문자와 기호까지 확인하세요.';
+    } else {
+      const total = p.checks.length;
+      const done = p.checks.filter((_, j) => $(`#ck-${k}-${j}`).checked).length;
+      pass = done === total;
+      msg = pass ? '' : `아직 ${total - done}개 항목이 남았습니다. 빠진 내용은 모범 답안을 보고 보완한 뒤 체크하세요.`;
+    }
+    out.innerHTML = pass ? `<div class="head pass">${p.mode==='free'?'완료했습니다':'정답입니다'}</div>` : `<div class="head fail">${p.mode==='free'?'아직입니다':'틀렸습니다'}</div><p>${msg}</p>`;
+    if (pass) {
+      store.set(`solved:${id}:${p.id}`, '1');
+      const st = $(`#ok-${k}`); st.textContent = '✓ 통과'; st.classList.add('ok');
+      renderList();
+    }
+  };
+}
+
+function problemHtmlCode(id,p,i){
+  const k = `${id}-${p.id}`;
+  const isP = p.mode === 'predict';
+  const kind = p.kind || (isP ? '출력 예측' : '코드 작성');
+  const saved = store.get(`code:${id}:${p.id}`);
+  const editor = isP
+    ? `<div class="lbl">코드 (읽기 전용)</div><pre>${esc(p.code)}</pre><div class="lbl">내 예측</div><textarea class="code" id="in-${k}" style="min-height:100px" spellcheck="false" placeholder="예상 출력을 줄바꿈까지 그대로 적으세요">${esc(saved||'')}</textarea>`
+    : `<div class="lbl">코드 입력</div><textarea class="code" id="in-${k}" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off">${esc(saved ?? p.starter)}</textarea>`
+      + (p.harness ? `<small class="note-s">아래 코드가 위 코드 뒤에 자동으로 붙어서 실행됩니다. (오류 줄 번호는 합친 기준입니다)</small><pre>${esc(p.harness)}</pre>` : '');
+  const ok = solved(id,p.id);
+  return `<section class="prob" id="c-${k}">
+    <header class="ph"><span class="num">${i+1}</span><div><div class="pt">${esc(p.title)}</div>
+      <div class="meta"><span class="kind">${kind}</span><span class="st ${ok?'ok':''}" id="ok-${k}">${ok?'✓ 통과':'미완료'}</span></div></div></header>
+    <div class="pb">
+      <div class="lbl">문제</div>
+      ${marked.parse(p.prompt)}
+      ${editor}
+      <div class="row">
+        <button class="btn main" id="run-${k}">${isP?'확인':'실행하고 채점'} (Ctrl+Enter)</button>
+        <button class="btn" id="hint-${k}">힌트 (0/${p.hints.length})</button>
+        <button class="btn" id="sol-${k}">정답 보기</button>
+        ${isP?'':`<button class="btn" id="rst-${k}">처음 코드로</button>`}
+      </div>
+      <div id="hints-${k}"></div><div id="solbox-${k}"></div><div class="res" id="res-${k}"></div>
+    </div>
+  </section>`;
+}
+
+function bindCode(id,p){
+  const k = `${id}-${p.id}`, ta = $(`#in-${k}`);
+  let shown = 0, solOpen = false;
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Tab') { e.preventDefault(); ta.setRangeText('    ', ta.selectionStart, ta.selectionEnd, 'end'); }
+    if (e.key === 'Enter' && e.ctrlKey) run();
+  });
+  ta.addEventListener('input', () => store.set(`code:${id}:${p.id}`, ta.value));
+  $(`#run-${k}`).onclick = run;
+  $(`#hint-${k}`).onclick = () => {
+    if (shown >= p.hints.length) return;
+    $(`#hints-${k}`).insertAdjacentHTML('beforeend', `<div class="hint"><b>힌트 ${shown+1}.</b> ${marked.parseInline(p.hints[shown])}</div>`);
+    shown++; $(`#hint-${k}`).textContent = `힌트 (${shown}/${p.hints.length})`;
+    if (shown >= p.hints.length) $(`#hint-${k}`).disabled = true;
+  };
+  // 정답 보기는 누를 때마다 열고 닫는다.
+  const sol = $(`#sol-${k}`);
+  sol.onclick = () => {
+    solOpen = !solOpen;
+    $(`#solbox-${k}`).innerHTML = solOpen ? `<div class="hint"><b>정답</b><pre>${esc(p.solution)}</pre></div>` : '';
+    sol.textContent = solOpen ? '정답 숨기기' : '정답 보기';
+    sol.classList.toggle('on', solOpen);
+  };
+  const rst = $(`#rst-${k}`);
+  if (rst) rst.onclick = () => { ta.value = p.starter; store.set(`code:${id}:${p.id}`, p.starter); };
+
+  async function run(){
+    const btn = $(`#run-${k}`), out = $(`#res-${k}`);
+    btn.disabled = true; out.innerHTML = '<span class="soft">컴파일하고 실행하는 중...</span>';
+    try {
+      const r = await api('/api/run', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ note:id, problem:p.id, code: normalizeCode(ta.value), predict: ta.value }) });
+      curKey = k;
+      out.innerHTML = resultHtml(r, p);
+      if (r.unsupported) {
+        // 브라우저에서 실행할 수 없는 문제는 모범 답안과 비교해 직접 확인한다.
+        out.querySelector('.selfok').onclick = () => {
+          store.set(`solved:${id}:${p.id}`,'1');
+          const st = $(`#ok-${k}`); st.textContent = '✓ 자가 확인'; st.classList.add('ok');
+          renderList();
+        };
+      }
+      if (r.ok) {
+        store.set(`solved:${id}:${p.id}`,'1');
+        const st = $(`#ok-${k}`); st.textContent = '✓ 통과'; st.classList.add('ok');
+        renderList();
+      }
+    } catch (e) { out.innerHTML = `<span class="fail">서버에 연결하지 못했습니다.</span> ${esc(String(e))}`; }
+    btn.disabled = false;
+  }
+}
+
+function resultHtml(r, p){
+  if (r.error) return `<span class="fail">${esc(r.error)}</span>`;
+  if (r.unsupported) return `<div class="hint"><b>이 문제는 브라우저에서 실행할 수 없습니다.</b> 스레드나 예외(try, throw), 64비트 크기에 기대는 문제라서 PC 서버 모드(run.bat)에서만 채점됩니다.<br>정답 보기로 모범 답안과 비교해 보고, 맞게 풀었다면 아래 버튼을 누르세요.</div><div class="row"><button class="btn selfok">맞게 풀었어요 (자가 확인)</button></div>`;
+  if (r.stage === 'compile') {
+    // 첫 오류만 크게 보여 주고 전체는 접는다. 뒤쪽 오류는 대부분 첫 오류가 낳은 연쇄 오류다.
+    const lines = r.log.split('\n');
+    const first = lines.find(l => /error/.test(l)) || lines[0] || '';
+    const todo = (p.mode !== 'predict' && /TODO/.test(document.getElementById(`in-${curKey}`)?.value || '')) ? `<div class="hint">코드에 <code>// TODO</code> 가 남아 있습니다. 그 칸부터 채워 보세요.</div>` : '';
+    return `<div class="head fail">컴파일 실패</div>${todo}<pre>${esc(first)}</pre><details><summary>전체 메시지 보기</summary><pre>${esc(r.log)}</pre></details>`;
+  }
+  let h = r.ok ? `<div class="head pass">${r.predict?'맞았습니다':'모두 통과'}</div>` : `<div class="head fail">${r.predict?'실제 출력과 다릅니다':'통과하지 못했습니다'}</div>`;
+  if (r.log.trim()) h += `<details><summary>컴파일 경고</summary><pre>${esc(r.log)}</pre></details>`;
+  r.results.forEach(t => {
+    if (t.timedOut) h += `<div class="fail">시간 초과(5초)</div>`;
+    else if (!t.pass || r.predict) {
+      if (t.stdin && t.stdin.trim()) h += `<small style="color:var(--mute);font-weight:700">입력</small><pre>${esc(t.stdin.trim())}</pre>`;
+      h += `<div class="diff"><div><small>${r.predict?'내가 쓴 것':'기대 출력'}</small><pre>${esc(t.expect)}</pre></div><div><small>${r.predict?'실제 출력':'내 출력'}</small><pre>${esc(t.actual)}</pre></div></div>`;
+    }
+    if (t.stderr) h += `<pre>${esc(t.stderr)}</pre>`;
+  });
+  return h;
+}
+
+async function route(){
+  const m = location.hash.match(/^#\/note\/([A-H]\d{2})$/);
+  if (m) await showNote(m[1]); else renderList();
+}
+
+(async () => {
+  if (window.CW_STATIC) {
+    await window.CW_STATIC.unlock();   // 비밀번호를 받아 데이터를 푼다.
+    window.CW_STATIC.warm();           // 컴파일러를 미리 내려받아 첫 실행을 빠르게 한다.
+  }
+  notes = await api('/api/notes');
+  renderList();
+  window.addEventListener('hashchange', route);
+  route();
+})();
+</script>
+</body>
+</html>
