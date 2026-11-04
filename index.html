@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>공부 로드맵 연습</title>
+<title>C++</title>
 <script>
 // 깜빡임을 막으려고 그리기 전에 테마를 먼저 정한다.
 (function(){
@@ -80,7 +80,7 @@ pre code{background:none;border:0;padding:0;font-size:1em}
 
 /* 문제 카드 */
 .prob{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin:28px 0;overflow:hidden}
-.ph{display:flex;gap:14px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line);background:linear-gradient(0deg,transparent,color-mix(in srgb,var(--accent) 7%,transparent))}
+.ph{cursor:pointer;user-select:none;display:flex;gap:14px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line);background:linear-gradient(0deg,transparent,color-mix(in srgb,var(--accent) 7%,transparent))}
 .num{flex:none;width:36px;height:36px;border-radius:50%;background:var(--accent);color:var(--accent-fg);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px}
 .pt{font-size:18px;font-weight:700;line-height:1.4}
 .meta{display:flex;gap:8px;margin-top:2px;font-size:12.5px}
@@ -122,6 +122,15 @@ input.blank:focus{outline:2px solid var(--accent)}
 input.blank.good{border-color:var(--ok);background:#12301c}
 input.blank.bad{border-color:var(--bad);background:#3a1616}
 
+/* 문제 카드 접기: 머리를 누르면 본문이 접힌다 */
+.ph::after{content:"▾";margin-left:auto;padding-left:12px;font-size:20px;color:var(--mute)}
+.prob.closed .ph::after{content:"▸"}
+.prob.closed .pb{display:none}
+.prob.closed .ph{border-bottom:0}
+/* 쉬운 설명 카드 */
+.easy{background:color-mix(in srgb,var(--accent) 8%,var(--panel));border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));border-radius:12px;padding:6px 18px 12px;margin:18px 0}
+.easy summary{font-size:17px;font-weight:800;color:var(--accent);cursor:pointer;padding:8px 0}
+.easy p,.easy li{max-width:none}
 /* 터치 기기: iOS 는 글자가 16px 보다 작으면 입력칸을 눌렀을 때 화면이 확대된다. */
 @media (pointer:coarse){textarea,input.blank{font-size:16px}}
 /* 키보드 위 기호 줄 (터치 기기에서 코드 입력칸에 포커스가 있을 때만) */
@@ -140,7 +149,7 @@ input.blank.bad{border-color:var(--bad);background:#3a1616}
 <div class="wrap" id="wrap">
   <button class="icon" id="expand" title="펼치기 (Ctrl+B)" aria-label="목록 펼치기"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="3" width="14" height="12" rx="2"/><path d="M7 3v12"/></svg></button>
   <nav>
-    <div class="navtop"><h1>공부 로드맵 연습</h1>
+    <div class="navtop"><h1>C++</h1>
       <button class="icon" id="collapse" title="접기 (Ctrl+B)" aria-label="목록 접기"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="3" width="14" height="12" rx="2"/><path d="M7 3v12"/></svg></button></div>
     <div class="theme" id="theme"><button data-t="light">화이트</button><button data-t="dark">블랙</button></div>
     <div class="filters" id="filters"></div>
@@ -238,14 +247,27 @@ function splitInterview(md){
 async function showNote(id){
   const [note, probs] = await Promise.all([api(`/api/note/${id}`), api(`/api/problems/${id}`)]);
   const { body, qa } = splitInterview(note.markdown);
-  let h = marked.parse(body);
+  // 면접 질문의 답은 실제 면접에서 말하는 어투로 쓴 것이 있으면 그것을 보여 준다. (개수가 맞을 때만)
+  if (note.speak) {
+    const sp = [...note.speak.matchAll(/^\d+\.\s+([\s\S]*?)(?=\n\d+\.\s+|\s*$)/gm)].map(x => x[1].trim());
+    if (sp.length === qa.length) qa.forEach((x, i) => { x.a = sp[i]; });
+  }
+  // 쉬운 설명 카드는 맨 위 요약 바로 아래에 둔다. 비유와 용어 풀이로 먼저 감을 잡게 한다.
+  const cut = body.indexOf('\n## ');
+  const easyHtml = note.easy ? `<details class="easy" open><summary>쉽게 이해하기</summary>${marked.parse(note.easy)}</details>` : '';
+  let h = cut < 0 ? marked.parse(body) + easyHtml : marked.parse(body.slice(0, cut)) + easyHtml + marked.parse(body.slice(cut));
   h += `<h2>직접 풀어 보기</h2>`;
+  if (probs.length) h += `<div class="row"><button class="btn" id="fold-all">모두 접기</button><button class="btn" id="unfold-all">모두 펼치기</button></div>`;
   h += probs.length ? probs.map((p,i)=>problemHtml(id,p,i)).join('') : `<p class="soft">이 노트의 연습 문제는 아직 없습니다.</p>`;
   if (qa.length) {
     h += `<h2>면접 질문</h2><p class="soft">먼저 소리 내어 답해 보고 눌러서 확인하세요.</p>`;
     h += qa.map(x => `<details class="qa"><summary>${esc(x.q)}</summary><div>${marked.parseInline(x.a)}</div></details>`).join('');
   }
   $('#view').innerHTML = h;
+  // 문제 카드는 접어 둘 수 있고, 접은 상태는 기억한다.
+  const setAll = closed => document.querySelectorAll('.prob').forEach(c => { c.classList.toggle('closed', closed); store.set(`closed:${c.id}`, closed ? '1' : '0'); });
+  document.querySelectorAll('.prob').forEach(c => { if (store.get(`closed:${c.id}`) === '1') c.classList.add('closed'); });
+  if ($('#fold-all')) { $('#fold-all').onclick = () => setAll(true); $('#unfold-all').onclick = () => setAll(false); }
   window.scrollTo(0,0);
   probs.forEach(p => bindProblem(id,p));
   renderList();
@@ -296,7 +318,7 @@ function bindQuiz(id,p){
   let shown = 0, solOpen = false;
   $(`#hint-${k}`).onclick = () => {
     if (shown >= p.hints.length) return;
-    $(`#hints-${k}`).insertAdjacentHTML('beforeend', `<div class="hint"><b>힌트 ${shown+1}.</b> ${marked.parseInline(p.hints[shown])}</div>`);
+    $(`#hints-${k}`).insertAdjacentHTML('beforeend', `<div class="hint"><b>${p.todo > 1 ? `TODO ${shown+1} 힌트` : `힌트 ${shown+1}`}.</b> ${marked.parseInline(p.hints[shown])}</div>`);
     shown++; $(`#hint-${k}`).textContent = `힌트 (${shown}/${p.hints.length})`;
     if (shown >= p.hints.length) $(`#hint-${k}`).disabled = true;
   };
@@ -382,7 +404,7 @@ function bindCode(id,p){
   $(`#run-${k}`).onclick = run;
   $(`#hint-${k}`).onclick = () => {
     if (shown >= p.hints.length) return;
-    $(`#hints-${k}`).insertAdjacentHTML('beforeend', `<div class="hint"><b>힌트 ${shown+1}.</b> ${marked.parseInline(p.hints[shown])}</div>`);
+    $(`#hints-${k}`).insertAdjacentHTML('beforeend', `<div class="hint"><b>${p.todo > 1 ? `TODO ${shown+1} 힌트` : `힌트 ${shown+1}`}.</b> ${marked.parseInline(p.hints[shown])}</div>`);
     shown++; $(`#hint-${k}`).textContent = `힌트 (${shown}/${p.hints.length})`;
     if (shown >= p.hints.length) $(`#hint-${k}`).disabled = true;
   };
@@ -450,6 +472,15 @@ async function route(){
   const m = location.hash.match(/^#\/note\/([A-H]\d{2})$/);
   if (m) await showNote(m[1]); else renderList();
 }
+
+// 문제 카드 머리를 누르면 접고 편다. 카드는 노트를 열 때마다 새로 만들어지므로 #view 에서 한 번만 받는다.
+$('#view').addEventListener('click', e => {
+  const ph = e.target.closest('.ph');
+  if (!ph) return;
+  const c = ph.parentElement;
+  c.classList.toggle('closed');
+  store.set(`closed:${c.id}`, c.classList.contains('closed') ? '1' : '0');
+});
 
 (async () => {
   if (window.CW_STATIC) {

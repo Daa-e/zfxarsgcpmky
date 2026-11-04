@@ -44,7 +44,7 @@
     document.head.appendChild(st);
     const g = document.createElement('div');
     g.id = 'gate';
-    g.innerHTML = `<form><h2>공부 로드맵 연습</h2><p>비밀번호를 입력하세요.</p>
+    g.innerHTML = `<form><h2>C++</h2><p>비밀번호를 입력하세요.</p>
       <input type="password" id="gpw" autocomplete="current-password" autofocus>
       <label><input type="checkbox" id="grem" checked> 이 기기에서 비밀번호 기억</label>
       <button type="submit">열기</button><div class="err" id="gerr"></div></form>`;
@@ -153,7 +153,7 @@
     if (url === '/api/notes') return DATA.notes;
     if ((m = url.match(/^\/api\/note\/([A-H]\d{2})$/))) {
       const n = DATA.notes.find(x => x.id === m[1]);
-      return n ? { ...n, markdown: DATA.markdown[m[1]] } : { error: 'no note' };
+      return n ? { ...n, markdown: DATA.markdown[m[1]], easy: (DATA.easy || {})[m[1]] || '', speak: (DATA.speak || {})[m[1]] || '' } : { error: 'no note' };
     }
     if ((m = url.match(/^\/api\/problems\/([A-H]\d{2})$/))) return DATA.problems[m[1]] || [];
     if (url === '/api/run') return run(JSON.parse(opt.body));
